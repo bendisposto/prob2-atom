@@ -1,10 +1,9 @@
 {
   "name": "prob",
   "main": "./lib/pro-b",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "description": "ProB 2.0 UI Plug-in for Atom",
-  "keywords": [
-  ],
+  "keywords": [],
   "activationCommands": {
     "atom-workspace": "pro-b:toggle"
   },
@@ -14,12 +13,11 @@
     "atom": ">=1.0.0 <2.0.0"
   },
   "consumedServices": {
-   "status-bar": {
-    "versions": {
-      "^1.0.0": "consumeStatusBar"
+    "status-bar": {
+      "versions": {
+        "^1.0.0": "consumeStatusBar"
+      }
     }
-   }
   },
-  "dependencies": {
-  }
+  "dependencies": {}
 }
