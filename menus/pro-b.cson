@@ -1,0 +1,58 @@
+# See https://atom.io/docs/latest/hacking-atom-package-word-count#menus for more details
+'context-menu':
+  'atom-text-editor': [
+    {
+      'label': 'Toggle pro-b'
+      'command': 'pro-b:toggle'
+    }
+  ]
+'menu': [
+  {
+    'label': 'Animate'
+    'submenu': [
+      {
+        'label': 'Foo'
+        'command': 'pro-b:toggle'
+      }
+      ]
+  }
+  {
+    'label': 'Verify'
+    'submenu': [
+      {
+        'label': 'Foo'
+        'command': 'pro-b:toggle'
+      }
+      ]
+  }
+  {
+    'label': 'Analyze'
+    'submenu': [
+      {
+        'label': 'Foo'
+        'command': 'pro-b:toggle'
+      }
+      ]
+  }
+  {
+    'label': 'Visualize'
+    'submenu': [
+      {
+        'label': 'Foo'
+        'command': 'pro-b:toggle'
+      }
+      ]
+  }
+  {
+    'label': 'Packages'
+    'submenu': [
+      'label': 'pro-b'
+      'submenu': [
+        {
+          'label': 'Toggle'
+          'command': 'pro-b:toggle'
+        }
+      ]
+    ]
+  }
+]
