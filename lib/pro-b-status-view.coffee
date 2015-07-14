@@ -10,7 +10,8 @@ class StatusView extends View
 
   initialize: () ->
     console.log 'Hiya'
-
+    p = require('./prob_ui')
+    console.log p
 
 
   destroy: ->
