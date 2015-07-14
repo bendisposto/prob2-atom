@@ -1,4 +1,5 @@
 ProBView = require './pro-b-view'
+StatusView = require './pro-b-status-view'
 {CompositeDisposable} = require 'atom'
 
 module.exports = ProB =
@@ -15,6 +16,10 @@ module.exports = ProB =
 
     # Register command that toggles this view
     @subscriptions.add atom.commands.add 'atom-workspace', 'pro-b:toggle': => @toggle()
+
+  consumeStatusBar: (statusBar) ->
+    @view = new StatusView()
+    statusBar.addLeftTile(item: @view, priority: 200)
 
   deactivate: ->
     @modalPanel.destroy()
