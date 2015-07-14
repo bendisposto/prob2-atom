@@ -4,9 +4,6 @@
   "version": "0.1.0",
   "description": "ProB 2.0 UI Plug-in for Atom",
   "keywords": [],
-  "activationCommands": {
-    "atom-workspace": "pro-b:toggle"
-  },
   "repository": "https://github.com/bendisposto/prob2-atom",
   "license": "EPL-1.0",
   "engines": {
