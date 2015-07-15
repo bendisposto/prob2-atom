@@ -4,6 +4,8 @@
             [re-frame.core :as rf]
             [taoensso.encore :as enc  :refer (logf log logp)]))
 
+(def prob (atom nil))
+
 (defn init-websocket []
   (let [{:keys [chsk ch-recv send-fn state]}
         (sente/make-channel-socket! (str "127.0.0.1" ":" 3000 "/updates") {:type :auto})]
@@ -23,7 +25,10 @@
 (rf/register-handler
   :connection-status
   rf/debug
-  (fn [db _] (logp :connected) db))
+  (fn [db [_ status]]
+     (.setConnectionStatus (.-statusView @prob) status)
+     (logp :connected)
+      db))
 
 (rf/register-handler
     :message
@@ -35,7 +40,10 @@
   rf/debug
   (fn [db _] (assoc db :sente (init-websocket))))
 
-(defn start []
+(defn ^:export start []
+  (logp :atom js/atom)
+  (logp :prob (.-prob js/atom))
+  (reset! prob (.-prob js/atom))
   (rf/dispatch [:init]))
 
 (set! cljs.core/*main-cli-fn* start)

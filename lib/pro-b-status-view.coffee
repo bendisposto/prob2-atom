@@ -5,22 +5,16 @@ module.exports =
 class StatusView extends View
   @content: ->
     @div class: "pro-b inline-block", =>
-      @span click: 'log' , class: "status-offline", "ProB"
-      @span outlet: 'statusText'
-
-  initialize: () ->
-    console.log 'Hiya'
-    p = require('./prob_ui')
-    console.log p
-
+      @span id: 'probstatus', click: 'log' , class: "offline", "ProB"
 
   destroy: ->
     @detach()
 
-  update: (status) =>
-    @statusText.text(status)
+  setConnectionStatus: (status) ->
+    document.getElementById("probstatus").setAttribute 'class', if status then 'online' else 'offline'
 
   log: (event, _) ->
+    toggleStatus()
     console.log "D'oh!"
     console.log event
     {BufferedProcess} = require 'atom'
