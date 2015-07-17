@@ -14,9 +14,6 @@ class StatusView extends View
     document.getElementById("probstatus").setAttribute 'class', if status then 'online' else 'offline'
 
   log: (event, _) ->
-    toggleStatus()
-    console.log "D'oh!"
-    console.log event
     {BufferedProcess} = require 'atom'
     command = 'ps'
     args  = ['-ef']

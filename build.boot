@@ -11,7 +11,7 @@
                  [re-frame "0.4.1"]
                  [com.cognitect/transit-cljs "0.8.220"]
                  [com.taoensso/encore "1.37.0"]
-                 [reagent "0.5.0"]
+                 [reagent "0.5.0" :exclusions [cljsjs/react]]
                  [reagent-utils "0.1.4"]
                  [markdown-clj "0.9.66"]
                  [prismatic/schema "0.4.3"]

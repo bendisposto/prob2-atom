@@ -1,17 +1,26 @@
-ProBView = require './pro-b-view'
 StatusView = require './pro-b-status-view'
+HistoryView = require './prob-history-view'
+
+url = require 'url'
 
 {CompositeDisposable} = require 'atom'
 
 module.exports = ProB =
-  proBView: null
-  modalPanel: null
   subscriptions: null
   statusView: null
 
   activate: (state) ->
-    @proBView = new ProBView(state.proBViewState)
-    @modalPanel = atom.workspace.addModalPanel(item: @proBView.getElement(), visible: false)
+    atom.workspace.addOpener (uri) ->
+      try
+        {protocol, host, pathname} = url.parse(uri)
+      catch error
+        return
+      return unless protocol is 'prob:'
+      try
+        pathname = decodeURI(pathname) if pathname
+      catch error
+        return
+      new HistoryView(greeting: "Hi there")
 
     # Events subscribed to in atom's system can be easily cleaned up with a CompositeDisposable
     @subscriptions = new CompositeDisposable
@@ -26,18 +35,12 @@ module.exports = ProB =
     statusBar.addLeftTile(item: @statusView, priority: 200)
 
   deactivate: ->
-    @modalPanel.destroy()
     @subscriptions.dispose()
-    @proBView.destroy()
     @statusView.destroy()
 
   serialize: ->
     proBViewState: @proBView.serialize()
 
   toggle: ->
-    console.log 'ProB was toggled!'
-
-    if @modalPanel.isVisible()
-      @modalPanel.hide()
-    else
-      @modalPanel.show()
+    uri = "prob://history/dd549c70-addd-413f-9d9f-2ce28cdc3bde"
+    atom.workspace.open(uri, split: 'right', searchAllPanes: true)
