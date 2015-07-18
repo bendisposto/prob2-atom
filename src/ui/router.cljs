@@ -4,11 +4,68 @@
             [taoensso.sente  :as sente]
             [re-frame.core :as rf]
             [reagent.core :as r]
+            [cognitect.transit :as transit]
             [taoensso.encore :as enc  :refer (logf log logp)]))
 
 (def prob (atom nil))
 (def id (atom 0))
 (defn fresh-id [] (swap! id inc))
+
+(defn deep-merge [left right]
+  (let [k (keys right)
+        knew (remove #(contains? left %) k)
+        kmerge (filter #(contains? left %) k)
+        left' (reduce (fn [a e] (assoc a e (get right e))) left knew)]
+    (reduce (fn [a e]
+              (let [v (get left e)
+                    v' (get right e)]
+                (if (and (map? v) (map? v'))
+                  (assoc a e (deep-merge v v'))
+                  (if (= v v') a (assoc a e v'))))) left' kmerge)))
+
+(defn read-transit [db msg]
+  (if (:encoding db)
+    (let [r (transit/reader (:encoding db))]
+      (transit/read r msg))
+    (keyword msg)))
+
+(def relay
+  (fn [{{send! :send!} :websocket :as db} [t m]]
+    (send! [t m])
+    db))
+
+(defn decode
+  "Takes a handler of 2 arguments, where the second argument is a vector of a
+   message type and a message. The message is read through transit if the
+   encoding has been set. Otherwise it create a keyword from the message
+   (only used when fetching the encoding from the server).
+   This middleware should be applied before the with-send middleware."
+  [handler]
+    (fn [db v]
+      (handler db [(first v) (read-transit db (second v))])))
+
+(defn with-send
+  "Takes a handler of 2 arguments, where the second argument is a vector of a
+   message type, a message and a function that sends a message to the server.
+   Should be applied last!"
+  [handler]
+    (fn [{{send! :send!} :websocket :as db} [type msg]]
+      (handler db [type msg send!])))
+
+(rf/register-handler :chsk/encoding relay)
+
+(rf/register-handler
+ :sente/encoding
+ (comp  rf/debug decode with-send)
+ (fn [db [_ enc send!]]
+   (send! [:prob2/handshake {}])
+   (assoc db :encoding enc)))
+
+(rf/register-handler
+   :de.prob2.kernel/ui-state
+   (comp rf/debug decode)
+   (fn [db [_ deltas]]
+     (deep-merge db deltas)))
 
 (defn init-websocket []
   (let [{:keys [chsk ch-recv send-fn state]}
@@ -21,9 +78,8 @@
      :stop! (sente/start-chsk-router!
              ch-recv
              (fn [e]
-               (rf/dispatch [:message (:?data e)])
-               #_(when (= (:id e) :chsk/recv)
-                 (dispatch (vec (:?data e))))))}))
+               (when (= (:id e) :chsk/recv)
+                 (rf/dispatch (vec (:?data e))))))}))
 
 
 (rf/register-sub
@@ -35,7 +91,9 @@
   :connection-status
   rf/debug
   (fn [db [_ status]]
-     (assoc db :connected status)))
+    (when status
+     (rf/dispatch [:chsk/encoding]))
+    (assoc db :connected status :encoding nil)))
 
 (rf/register-handler
     :message
@@ -45,7 +103,7 @@
 (rf/register-handler
   :init
   rf/debug
-  (fn [db _] (assoc db :sente (init-websocket))))
+  (fn [db _] (assoc db :websocket (init-websocket))))
 
 (defn ^:extern subs-handler
     "Forwards changes to a subscription to a handler. First argument
