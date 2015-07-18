@@ -5,13 +5,20 @@ module.exports =
 class StatusView extends View
   @content: ->
     @div class: "pro-b inline-block", =>
-      @span id: 'probstatus', click: 'log' , class: "offline", "ProB"
+      @span outlet: "status", id: 'probstatus', click: 'log' , class: "offline", "ProB"
 
   destroy: ->
     @detach()
 
-  setConnectionStatus: (status) ->
-    document.getElementById("probstatus").setAttribute 'class', if status then 'online' else 'offline'
+  initialize: (params) ->
+    atom.prob.ui.listen('[:connected]', @setStatus)
+
+  setStatus: (x) =>
+    if x
+      @status.addClass("online")
+    else
+      @status.removeClass("online")
+
 
   log: (event, _) ->
     {BufferedProcess} = require 'atom'

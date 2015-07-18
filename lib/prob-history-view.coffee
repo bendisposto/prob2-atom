@@ -10,8 +10,7 @@ class HistoryView extends View
         @span outlet: "connected"
 
   initialize: (params) ->
-    atom.prob.ui.subs_handler(':connection', '[:connected]')
-    atom.prob.ui.register_handler(':connection', @changeConnection)
+    atom.prob.ui.listen('[:connected]',@changeConnection)
     @connected.html("Not connected")
 
   changeConnection:(x,db) =>

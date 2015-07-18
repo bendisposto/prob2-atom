@@ -7,6 +7,8 @@
             [taoensso.encore :as enc  :refer (logf log logp)]))
 
 (def prob (atom nil))
+(def id (atom 0))
+(defn fresh-id [] (swap! id inc))
 
 (defn init-websocket []
   (let [{:keys [chsk ch-recv send-fn state]}
@@ -33,7 +35,6 @@
   :connection-status
   rf/debug
   (fn [db [_ status]]
-     (.setConnectionStatus (.-statusView @prob) status)
      (assoc db :connected status)))
 
 (rf/register-handler
@@ -46,13 +47,13 @@
   rf/debug
   (fn [db _] (assoc db :sente (init-websocket))))
 
-  (defn ^:extern subs-handler
+(defn ^:extern subs-handler
     "Forwards changes to a subscription to a handler. First argument
     is the handler id that should be triggered. The second argument
     is a subscription pattern. All following arguments are added to
     the handler dispatch call. All arguments are preprocessed by the
     Clojurescript reader. The handler is called with the changed
-    subscription. The arguments are also passed into this funtion.
+    subscription. The arguments are also passed into this function.
     The registration of the handler must be done separately.
 
     For instance: We have a handler registered that uses the key :foo
@@ -67,11 +68,6 @@
     function(x,db) { console.log('changed',x,
     'fulltree',db,
     'args',arguments);})
-
-    Important: A handler should not take longer than 16ms to run. Long
-    running handlers are supposed to split up the work into chunks and
-    call themselfs after 16 ms. Information for splitting up the work
-    can be encoded in the optional arguments.
     "
     [handler hook & args]
     (let [real-handler (cljs.reader/read-string handler)
@@ -83,27 +79,28 @@
                       args)))))
 
 
-  (defn ^:extern register-handler
+(defn ^:extern register-handler
     "Registers a handler function. The first argument is the handler key,
     the second argument is a function of at least two arguments.
     The first argument is the changed part of the state. The second argument
     is the full state. Additional arguments are those that were passed from
-    the subscription.
-
-    Important: A handler should not take longer than 16ms to run. Long
-    running handlers are supposed to split up the work into chunks and
-    call themselfs after 16 ms. Information for splitting up the work
-    can be encoded in the optional arguments.
-    "
+    the subscription."
     [handler f]
     (let [real-handler (cljs.reader/read-string handler)]
       (rf/register-handler
        real-handler
        (fn [db [_ x & args]]
+         (logp :handle real-handler)
          (let [jsdb (clj->js db)
                jsx (clj->js x)
                res (apply f jsx jsdb args)]
            db)))))
+
+(defn listen [hook f & args]
+  (let [handler (str "listener" (fresh-id))]
+    (apply subs-handler handler hook args)
+    (register-handler handler f)))
+
 
 (defn ^:export start []
   (logp :atom js/atom)
