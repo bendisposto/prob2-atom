@@ -5,16 +5,19 @@ class HistoryView extends View
 
   @content: (params) ->
     @div =>
-      @h1 =>
-        @span "Connection Status: "
-        @span outlet: "connected"
+      @ol outlet: "history"
 
   initialize: (params) ->
-    atom.prob.ui.listen('[:connected]',@changeConnection)
-    @connected.html("Not connected")
+    atom.prob.ui.register_handler("history-view-5e9a6977-f4de-4765-937d-9162f3603f66", @changeTrace)
+    atom.prob.ui.subscribe("history-view-5e9a6977-f4de-4765-937d-9162f3603f66", '[:trace #uuid "5e9a6977-f4de-4765-937d-9162f3603f66"]')
 
-  changeConnection:(x,db) =>
-    if x then this.connected.html("Connected") else this.connected.html("Not Connected")
+  ppTransition: (t) ->
+    console.log t.name
+
+  changeTrace:(x,db) =>
+    @ppTransition t for t in x.transitions
+
+
 
   getTitle: ->
     "ProB"

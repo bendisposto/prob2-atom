@@ -10,6 +10,7 @@
 (def prob (atom nil))
 (def id (atom 0))
 (defn fresh-id [] (swap! id inc))
+(def listeners (atom {}))
 
 (defn deep-merge [left right]
   (let [k (keys right)
@@ -106,39 +107,28 @@
   :init
   (fn [db _] (assoc db :websocket (init-websocket))))
 
-(defn ^:extern subs-handler
-    "Forwards changes to a subscription to a handler. First argument
-    is the handler id that should be triggered. The second argument
-    is a subscription pattern. All following arguments are added to
-    the handler dispatch call. All arguments are preprocessed by the
-    Clojurescript reader. The handler is called with the changed
-    subscription. The arguments are also passed into this function.
-    The registration of the handler must be done separately.
+(def js-handlers (atom {}))
 
-    For instance: We have a handler registered that uses the key :foo
-    and we want to trigger :foo each time the trace with id
-    09b2fdfa-f49b-4c5f-be64-ea5e63f0d628 changes.
+(defn register-handler [id handler]
+  (swap! js-handlers assoc id handler))
 
-    de.prob2.subs.subs_handler(':foo', '[:trace #uuid \"09b2fdfa-f49b-4c5f-be64-ea5e63f0d628\"])
+(defn ^:extern subscribe
+    "Subscribes a callback to a subscription point.
 
-    A matching handler could be registered with
-    de.prob2.subs.register_handler(
-    ':foo',
-    function(x,db) { console.log('changed',x,
-    'fulltree',db,
-    'args',arguments);})
+    For instance: We want to trigger the function foo each time the trace with id
+    09b2fdfa-f49b-4c5f-be64-ea5e63f0d628 changes:
+
+    de.prob2.subs.subscribe(foo, '[:trace #uuid \"09b2fdfa-f49b-4c5f-be64-ea5e63f0d628\"])
     "
-    [handler hook & args]
-    (let [real-handler (cljs.reader/read-string handler)
-          real-hook (cljs.reader/read-string hook)
-          x (rf/subscribe real-hook)]
-      (ra/run! (rf/dispatch
-                (into [real-handler
-                       (clj->js @x)]
-                      args)))))
+    [id hook & args]
+    (let [real-hook (cljs.reader/read-string hook)
+          handler (get @js-handlers id)]
+            (when handler
+              (let [x (rf/subscribe real-hook)]
+                (ra/run! (handler (clj->js @x) args))))))
 
 
-(defn ^:extern register-handler
+(defn ^:extern register-rf-handler
     "Registers a handler function. The first argument is the handler key,
     the second argument is a function of at least two arguments.
     The first argument is the changed part of the state. The second argument
@@ -155,10 +145,7 @@
                res (apply f jsx jsdb args)]
            db)))))
 
-(defn listen [hook f & args]
-  (let [handler (str "listener" (fresh-id))]
-    (apply subs-handler handler hook args)
-    (register-handler handler f)))
+
 
 
 (defn ^:export start []

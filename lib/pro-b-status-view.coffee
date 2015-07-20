@@ -11,7 +11,8 @@ class StatusView extends View
     @detach()
 
   initialize: (params) ->
-    atom.prob.ui.listen('[:connected]', @setStatus)
+    atom.prob.ui.register_handler("status-view", @setStatus)
+    atom.prob.ui.subscribe("status-view", '[:connected]')
 
   setStatus: (x) =>
     if x
