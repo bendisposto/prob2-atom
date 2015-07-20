@@ -56,14 +56,14 @@
 
 (rf/register-handler
  :sente/encoding
- (comp  rf/debug decode with-send)
+ (comp  decode with-send)
  (fn [db [_ enc send!]]
    (send! [:prob2/handshake {}])
    (assoc db :encoding enc)))
 
 (rf/register-handler
    :de.prob2.kernel/ui-state
-   (comp rf/debug decode)
+   (comp decode)
    (fn [db [_ deltas]]
      (deep-merge db deltas)))
 
@@ -81,6 +81,10 @@
                (when (= (:id e) :chsk/recv)
                  (rf/dispatch (vec (:?data e))))))}))
 
+(rf/register-sub
+  :trace
+  (fn [db [_ uuid]]
+    (reaction (get-in @db [:traces uuid]))))
 
 (rf/register-sub
   :connected
@@ -89,7 +93,6 @@
 
 (rf/register-handler
   :connection-status
-  rf/debug
   (fn [db [_ status]]
     (when status
      (rf/dispatch [:chsk/encoding]))
@@ -97,12 +100,10 @@
 
 (rf/register-handler
     :message
-    rf/debug
     (fn [db [_ msg]] (logp :received msg) db))
 
 (rf/register-handler
   :init
-  rf/debug
   (fn [db _] (assoc db :websocket (init-websocket))))
 
 (defn ^:extern subs-handler
