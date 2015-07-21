@@ -1,9 +1,7 @@
 (ns ui.router
   (:require-macros [reagent.ratom :as ra :refer [reaction]])
-  (:require [cljs.nodejs :as node]
-            [taoensso.sente  :as sente]
+  (:require [taoensso.sente  :as sente]
             [re-frame.core :as rf]
-            [reagent.core :as r]
             [cognitect.transit :as transit]
             [taoensso.encore :as enc  :refer (logf log logp)]))
 
