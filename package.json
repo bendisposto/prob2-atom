@@ -16,5 +16,8 @@
       }
     }
   },
-  "dependencies": {}
+  "dependencies": {
+    "atom-space-pen-views": "2.0.5",
+    "react-for-atom" : "0.13.6"
+  }
 }

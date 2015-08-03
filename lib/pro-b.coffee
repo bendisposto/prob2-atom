@@ -5,6 +5,7 @@ url = require 'url'
 
 {CompositeDisposable} = require 'atom'
 
+
 module.exports = ProB =
   subscriptions: null
   statusView: null
@@ -28,6 +29,7 @@ module.exports = ProB =
     # Register command that toggles this view
     @subscriptions.add atom.commands.add 'atom-workspace', 'pro-b:toggle': => @toggle()
     atom.prob = this
+    window.React = require('react-for-atom');
     require './prob_ui'
 
   consumeStatusBar: (statusBar) ->
