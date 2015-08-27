@@ -2,6 +2,7 @@
   (:require-macros [reagent.ratom :as ra :refer [reaction]])
   (:require [taoensso.sente  :as sente]
             [re-frame.core :as rf]
+            [reagent.core :as r]
             [cognitect.transit :as transit]
             [taoensso.encore :as enc  :refer (logf log logp)]))
 
@@ -86,12 +87,21 @@
     (reaction (get-in @db [:traces uuid]))))
 
 (rf/register-sub
+  :trace-list
+  (fn [db _]
+    (let [traces (reaction (get-in @db [:traces]))
+          models (map :model @traces)]
+      (logp :trigger)
+      (reaction models))))
+
+(rf/register-sub
   :connected
   (fn [db _]
     (reaction (:connected @db))))
 
 (rf/register-handler
   :connection-status
+  debug
   (fn [db [_ status]]
     (when status
      (rf/dispatch [:chsk/encoding]))
@@ -99,16 +109,19 @@
 
 (rf/register-handler
     :message
+    debug
     (fn [db [_ msg]] (logp :received msg) db))
 
 (rf/register-handler
   :init
+  debug
   (fn [db _] (assoc db :websocket (init-websocket))))
 
 (def js-handlers (atom {}))
 
 (defn register-handler [id handler]
   (swap! js-handlers assoc id handler))
+
 
 (defn ^:extern subscribe
     "Subscribes a callback to a subscription point.
@@ -143,14 +156,17 @@
                res (apply f jsx jsdb args)]
            db)))))
 
-
-
-
-(defn ^:export start []
+(defn ^:extern start []
   (logp :atom js/atom)
   (logp :prob (.-prob js/atom))
   (reset! prob (.-prob js/atom))
   (set! (.-ui @prob) ui.router)
   (rf/dispatch [:init]))
+
+(defn le-view []
+  [:div "Hallo"])
+
+(defn ^:extern rendering [id view]
+  (r/render-component [le-view] (.getElementById js/document id)))
 
 (set! cljs.core/*main-cli-fn* start)

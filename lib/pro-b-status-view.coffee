@@ -1,6 +1,5 @@
 {View} = require 'atom-space-pen-views'
 
-
 module.exports =
 class StatusView extends View
   @content: ->
@@ -13,6 +12,8 @@ class StatusView extends View
   initialize: (params) ->
     atom.prob.ui.register_handler("status-view", @setStatus)
     atom.prob.ui.subscribe("status-view", '[:connected]')
+    #atom.prob.ui.register_handler("trace-view", @showList)
+    #atom.prob.ui.subscribe("trace-view", '[:trace-list]')
 
   setStatus: (x) =>
     if x
@@ -20,6 +21,8 @@ class StatusView extends View
     else
       @status.removeClass("online")
 
+  showList: (x) =>
+    console.log "a", x
 
   log: (event, _) ->
     {BufferedProcess} = require 'atom'
